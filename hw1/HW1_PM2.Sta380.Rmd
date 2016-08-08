@@ -1,0 +1,573 @@
+---
+title: 'STA 380, Part 2: Exercises 1'
+output: pdf_document
+---
+
+```{r,include=FALSE}
+library(knitr)
+library(mosaic)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+opts_chunk$set(echo=FALSE,
+               cache=TRUE, autodep=TRUE, cache.comments=FALSE,
+               message=FALSE, warning=FALSE)
+```
+
+
+#Probability practice
+##Part A.
+
+Here's a question a friend of mine was asked when he interviewed at Google.
+
+Visitors to your website are asked to answer a single survey question before they get access to the content on the page. Among all of the users, there are two categories: Random Clicker ($RC$), and Truthful Clicker ($TC$). There are two possible answers to the survey: yes and no. Random clickers would click either one with equal probability. You are also giving the information that the expected fraction of random clickers is $0.3$.
+
+After a trial period, you get the following survey results: $65\%$ said Yes and $35\%$ said No.
+
+What fraction of people who are truthful clickers answered yes?
+
+##Answer: 
+We define the following events:  
+RC: Random Clicker    
+TC:Truthful Clicker  
+Y: Answered yes  
+N:Answered no  
+
+From the problem formulation we know the following:  
+
+$P(Y)=0.65$  
+$P(N)=0.35$  
+$P(Y|RC)=0.5=P(N|RC)$  
+$P(RC)=0.3$  
+$P(TC)=0.7$  
+
+From the law of total probability we have that :  
+
+$P(Y)=P(Y|TC)\cdot P(TC)+P(Y|RC)\cdot P(RC)$  
+$0.65=P(Y|TC)\cdot 0.7+0.5\cdot0.3$  
+$P(Y|TC)=\frac{0.65-0.15}{0.7}$  
+$P(Y|TC)=\frac{5}{7}=0.71$  
+
+So, $71\%$ of the people who are truthful clickers answered yes.
+
+##Part B
+Imagine a medical test for a disease with the following two attributes:
+
+The sensitivity is about 0.993. That is, if someone has the disease, there is a probability of 0.993 that they will test positive.
+The specificity is about 0.9999. This means that if someone doesn't have the disease, there is probability of 0.9999 that they will test negative.
+In the general population, incidence of the disease is reasonably rare: about 0.0025% of all people have it (or 0.000025 as a decimal probability).
+
+Suppose someone tests positive. What is the probability that they have the disease? In light of this calculation, do you envision any problems in implementing a universal testing policy for the disease?
+
+##Answer: 
+
+We define the following events:  
+P: Tested positive  
+D: Has the desease  
+
+From the problem formulation we know the following:  
+
+$P(P|D)=0.9930$    
+$P(P^{c}|D^{c})=0.9999$    
+$P(P|D^{c})=1-P(P^{c}|D^{c})=0.0001$    
+$P(D)=0.000025$    
+$P(D^{c})=0.999975$   
+
+Then, in order to answer the question,we will use Bayes Rule (or conditional probability and law of total probability-it's the same):  
+
+$P(D|P)=\frac{P(DP)}{P(P)}=\frac{P(P|D)\cdot P(D)}{P(P|D)\cdot P(D)+P(P|D^{c})\cdot P(D^{c})}=0.1988\approx 0.2$  
+
+So approximately only 20% of the people who test positive, actualy have the desease.This is a very bad outcome, since a lot of people are going to get a false positive result and become worried with no actual reason. So I would suggest either implement a more accurate proceedure or suggest testing only to certain desease-high risk groups of the population.  
+
+#Exploratory analysis: green buildings  
+
+The dataset greenbuildings.csv contains data on 7,894 commercial rental properties from across the United States. Of these, 685 properties have been awarded either LEED or EnergyStar certification as a green building.In order to provide a control population for the 685 green buildings, each of these buildings was matched to a cluster of nearby commercial buildings in the CoStar database. Each small cluster contains one green-certified building, and all non-rated buildings within a quarter-mile radius of the certified building. On average, each of the 685 clusters contains roughly 12 buildings, for a total of 7,894 data points.    
+
+What we wish to achieve here is do some exploratory analysis and familiarize ourselves with the data so we can efficiently tacle the next assignment.
+
+```{r}
+GreenBuildings <- read.csv("~/R workspace/Predictive Modelling/Scott/HW1/greenbuildings.csv")
+attach(GreenBuildings)
+```
+
+The summary of the Rent variable is:  
+
+```{r}
+summary(GreenBuildings$Rent)
+```
+
+Here is a density plot of the cluster_rent.    
+
+```{r}
+densityplot(~GreenBuildings$cluster_rent,plot.points=FALSE)
+```
+  
+It is interesting to see the second spike  and that it is created because of the non green buildings:    
+
+
+```{r}
+densityplot(~GreenBuildings$cluster_rent|GreenBuildings$green_rating)
+```
+
+The low occupacy buildings that the 'Excel Guru' removed from the dataset are :
+```{r}
+low_occup <- subset(GreenBuildings,GreenBuildings$leasing_rate<0.1)
+length(low_occup)
+```
+Which indeed are too few, but I do not see the reason to exclude them from the analysis. If they had something 'weird' it is better to be identified and then logically excluded. For all we know it could distrort the analysis.
+
+```{r}
+boxplot(Rent~green_rating, main="Green vs Regular Rent", 
+        xlab="Green Rating", ylab="Rent",data=GreenBuildings)
+```
+
+
+#The assignment 
+
+The analysis presented to me by the 'Excel Guru' is not entirely mistaken,but very misleading. His analysis on whether the developer should invest in green building and go green is very myopic for the following reasons:  
+  
+    
+    
+
+1) Economic perspective: The fact that after certain years the green buildings will begin to recuperate  and move to produce earnings is naive. The same applies for non green constructions as well. The question should be answered either on a predifined horizon (10,20 years where we would be able to compare the earnings of each investment separately), or using some notion of opportunity cost; for example if the developer was to invest these 5 million somewhere else instead of getting a green certification,would be benefitted financially or not? Also we would have to take into account the maintainance of the 2 building types.  
+Having said that, is clear that a green building saves the user a lot of money in the long run, but the effect it has on the landlord/developer needs further evaluation.
+
+  
+    
+    
+
+
+2) The way conclusions were drawn from the data analysis. I will analyze the most important in my opinion. The expert,disregarded entirely has possibility of confounding variables for the relationship between rent and green status and did all his analyses separately for green and non green buildings. 
+\newpage
+
+But as we can see, one such is the class (A,B) distribution among the buildings.
+```{r}
+greenrating_classAB <- xtabs(~green_rating
+                             + class_a 
+                             + class_b, data = GreenBuildings)
+ftable(greenrating_classAB) # print table
+```
+
+So we that approximately $80\%$ of the green buildings is classified as class A and $19\%$ is classified as Class B, whereas for the rest of the buildings only $33\%$ and $44\%$ is class A buildings and class B respectively.
+
+After that it is clear that class is a confounding variable between rent and green buildings.
+
+If we wish to display the allocation of Class A and class B buildings we can see the next two plots.  
+
+
+```{r}
+mosaicplot(~ green_rating + class_a, data = GreenBuildings,color='purple')
+```
+
+```{r}
+mosaicplot(~ green_rating + class_b, data = GreenBuildings,color='pink')
+```
+
+  
+Another confounding factor is the net variable:
+
+```{r}
+mosaicplot(~ green_rating + net, data = GreenBuildings,color='blue')
+
+```
+
+The rent alone is not a good inditator of future profit. The vast majority of greenbuildings have a net contract and their utilities are included in the rent. So the actual rent is expected to be lower. This is something that the developer would like to take into account.
+
+To sum up, I think that a more carefull analysis needs to be done in order to say whether or not the developer should proceed into investing into the making of a green building. This research is beyond the scope of this exercise. I strongly dissagree with the kind of analysis the expert decided to conduct both from a statistical point as well as economical. What I would stress as a main mistake is that the existence of confounding variables for the relationship between rent and green status were overlooked and this affects the study. It could be that the green buildings are naturally pricier since they are newer,bigger,classier (Class A,B) and the utilities are included in the rent.  
+
+#Bootstrapping  
+
+We need to consider the following five asset classes, together with the ticker symbol for an exchange-traded fund that represents each class:  
+SPY,TLT,LQD,EEM,VNQ. Utilising real time data on the above ETF's we will try to estimate the risk/return of these assets. The final step is to consider having $100,000 to invest in one portfolio. These portfolios are an even split between the 5 assets, a safer option than the split and a more aggressive.
+The main goals here are:    
+
+1. To quantify the risk/return properties of the five major asset classes listed above.    
+2. Explain the choices of the "safe" and "aggressive" portfolios.  
+3. Use bootstrap resampling to estimate the 4-week (20 trading day) value at risk of each of the three portfolios at the 5% level.
+
+##Portfolio 1: The even split  
+
+
+```{r}
+library(mosaic)
+library(fImport)
+library(foreach)
+```
+
+We import 10 year's worth of data from the stock market, to use in our analysis.  
+```{r}
+# Import your  stocks
+mystocks = c("SPY", "TLT", "LQD","EEM","VNQ")
+myprices = yahooSeries(mystocks, from='2005-01-01', to='2016-07-30')
+
+```
+The first few rows of our dataset can be seen here:  
+
+```{r}
+# The first few rows
+head(myprices)
+```
+
+
+```{r}
+# A helper function for calculating percent returns from a Yahoo Series
+# Source this to the console first, and then it will be available to use
+# (Like importing a library)
+YahooPricesToReturns = function(series) {
+  mycols = grep('Adj.Close', colnames(series))
+  closingprice = series[,mycols]
+  N = nrow(closingprice)
+  percentreturn = as.data.frame(closingprice[2:N,]) / as.data.frame(closingprice[1:(N-1),]) - 1
+  mynames = strsplit(colnames(percentreturn), '.', fixed=TRUE)
+  mynames = lapply(mynames, function(x) return(paste0(x[1], ".PctReturn")))
+  colnames(percentreturn) = mynames
+  as.matrix(na.omit(percentreturn))
+}
+```
+Also here we can see the calculated returns from the closing prices of the assets.
+
+```{r}
+# Compute the returns from the closing prices
+myreturns = YahooPricesToReturns(myprices)
+head(myreturns)
+```
+ When there is a negative sign it means we lost the indicated amount of money .
+ Below you can see a plot of  returns over time. You can see the spikes/the periods where there was a lot of volatility in the market.
+```{r}
+
+plot(myreturns[,1], type='l') 
+
+# Look at the market returns over time
+#plot(myreturns[,3], type='l')
+#mean and stdv and confidence inderval
+```
+
+Let's assume we distribute evenly our wealth to these 5 assets.
+Then my return today would be: 
+```{r}
+
+############################################################################
+# One day Simulation of changes in the portfolio
+totalwealth = 100000
+weights = c(0.2, 0.2, 0.2,0.2,0.2) 	# What percentage of your wealth will you put in each stock?
+# Compute the moments of a one-day change in your portfolio
+#mu_SPY = mean(myreturns[,4])
+#sigma_SPY = sd(myreturns[,4])
+
+# Sample a random return from the empirical joint distribution
+# This simulates a random day
+return.today = resample(myreturns, 1, orig.ids=FALSE)
+```
+ 
+And my new wealth would be:
+```{r}
+# Update the value of your holdings
+total_wealth = 100000
+holdings = total_wealth*c(0.2,0.2,0.2, 0.2, 0.2)
+holdings = holdings + holdings*return.today
+
+# Compute your new total wealth
+totalwealth = sum(holdings)
+totalwealth
+```
+So I earned 74 cents!
+I we do this for each of the 20 days our 4 week period has, then we will
+end with a new total wealth of
+```{r}
+# Now loop over 4 trading weeks
+totalwealth = 100000
+weights = c(0.2, 0.2, 0.2, 0.2, 0.2)
+holdings = weights * totalwealth
+n_days = 20
+wealthtracker = rep(0, n_days) 
+for(today in 1:n_days) {
+  return.today = resample(myreturns, 1, orig.ids=FALSE)
+  holdings = holdings + holdings*return.today
+  totalwealth = sum(holdings)
+  wealthtracker[today] = totalwealth
+}
+totalwealth
+#plot(wealthtracker)
+plot(wealthtracker, type='l')
+```
+Also we can see the plot which illustrates our wealth for these past 20 days.
+
+```{r}
+# Now simulate many different possible trading years!
+sim1 = foreach(i=1:5000, .combine='rbind') %do% {
+  totalwealth = 100000
+  weights = c(0.2, 0.2, 0.2, 0.2, 0.2)
+  holdings = weights * totalwealth
+  wealthtracker = rep(0, n_days) 
+  for(today in 1:n_days) {
+    return.today = resample(myreturns, 1, orig.ids=FALSE)
+    holdings = holdings + holdings*return.today
+    totalwealth = sum(holdings)
+    wealthtracker[today] = totalwealth
+  }
+  wealthtracker
+}
+```
+Now if we run a Monte Carlo simulation the summary of our results is a mean which can be interpreted as our gain in dollars from our investment and the second one is a standard deviation. We can also observe the histogram of our simulations, over the days.
+```{r,echo=TRUE}
+#Result summary
+head(sim1)
+hist(sim1[,n_days],25)
+mean(sim1) 
+sd(sim1)
+```
+
+
+```{r,echo=FALSE}
+# Profit/loss
+profit=sim1-100000 #final wealth- initial wealth
+hist(sim1-100000)
+```
+Next we calculate the $5\%$ Value At Risk (VAR), which is the $5\%$ quantile of the profit/loss distribution of a portfolio for 20 days.
+
+In our case, the VAR is:
+
+```{r}
+
+
+# Calculate 5% value at risk VAR
+
+#the 5%  quantile of the profit/loss distribution of a portfolio for 20 days
+quantile(sim1[,n_days], 0.05) - 100000
+
+qdata(profit,0.05)
+#p     quantile 
+#0.05  -90457.03  # so VAR  is $90,457
+
+```
+ 
+We highlight in the graph below with blue, the VAR of our portfolio and for comparison purposes the expected return of our portfolio in this case is marked with purple. (for some reason,not knitting,while it is running,so I will not include this graph with the coloured lines)
+```{r}
+#var5percent=qdata_f(profit,0.05)[2]
+#abline(v=var5percent,col='royalblue',lw=3)# Var of our portfolio
+#abline(v=mean(profit),col='purple',lw=3)# expected return of the portfolio
+```
+
+#Portfolio 2: The safe option  
+
+If I distribute my wealth : $40\%,20\%,40\%,0\%,0\%$
+```{r}
+
+############################################################################
+# One day Simulation of changes in the portfolio
+totalwealth = 100000
+weights = c(0.4, 0.2, 0.4,0.0,0.0) 	# What percentage of your wealth will you put in each stock?
+# Compute the moments of a one-day change in your portfolio
+#mu_SPY = mean(myreturns[,4])
+#sigma_SPY = sd(myreturns[,4])
+
+# Sample a random return from the empirical joint distribution
+# This simulates a random day
+return.today = resample(myreturns, 1, orig.ids=FALSE)
+```
+ 
+And my new wealth would be:
+```{r}
+# Update the value of your holdings
+total_wealth = 100000
+holdings = total_wealth*c(0.4, 0.2, 0.4,0.0,0.0)
+holdings = holdings + holdings*return.today
+
+# Compute your new total wealth
+totalwealth = sum(holdings)
+totalwealth
+```
+So I earned or lost the below amount of  dollars!
+I we do this for each of the 20 days our 4 week period has, then we will
+end with a new total wealth of
+```{r}
+# Now loop over 4 trading weeks
+totalwealth = 100000
+weights = c(0.4, 0.2, 0.4,0.0,0.0)
+holdings = weights * totalwealth
+n_days = 20
+wealthtracker = rep(0, n_days) # Set up a placeholder to track total wealth
+for(today in 1:n_days) {
+  return.today = resample(myreturns, 1, orig.ids=FALSE)
+  holdings = holdings + holdings*return.today
+  totalwealth = sum(holdings)
+  wealthtracker[today] = totalwealth
+}
+totalwealth
+#plot(wealthtracker)
+plot(wealthtracker, type='l')
+```
+Also we can see the plot which illustrates our wealth for these past 20 days.
+
+```{r}
+# Now simulate many different possible trading years!
+sim1 = foreach(i=1:5000, .combine='rbind') %do% {
+  totalwealth = 100000
+  weights = c(0.4, 0.2, 0.4,0.0,0.0)
+  holdings = weights * totalwealth
+  wealthtracker = rep(0, n_days) # Set up a placeholder to track total wealth
+  for(today in 1:n_days) {
+    return.today = resample(myreturns, 1, orig.ids=FALSE)
+    holdings = holdings + holdings*return.today
+    totalwealth = sum(holdings)
+    wealthtracker[today] = totalwealth
+  }
+  wealthtracker
+}
+```
+Now if we run a Monte Carlo simulation the summary of our results is a mean which can be interpreted as our gain in dollars from our investment and the second one is a standard deviation. We can also observe the histogram of our simulations, over the days.
+```{r,echo=TRUE}
+#Result summary
+head(sim1)
+hist(sim1[,n_days],25)
+mean(sim1) 
+sd(sim1)
+```
+
+
+```{r,echo=FALSE}
+# Profit/loss
+profit=sim1-100000 #final wealth- initial wealth
+hist(sim1-100000)
+```
+Next we calculate the $5\%$ Value At Risk (VAR), which is the $5\%$ quantile of the profit/loss distribution of a portfolio for 20 days.
+
+In our case, the VAR is:
+
+```{r}
+
+
+# Calculate 5% value at risk VAR
+
+#the 5%  quantile of the profit/loss distribution of a portfolio for 20 days
+quantile(sim1[,n_days], 0.05) - 100000
+
+qdata(profit,0.05)
+
+
+```
+
+
+Or we can use again and again the first model by re-allocating our investments:
+For example: If I distribute my wealth : $20\%,10\%,10\%,20\%,40\%$
+```{r}
+
+############################################################################
+# One day Simulation of changes in the portfolio
+totalwealth = 100000
+weights = c(0.2, 0.1, 0.1,0.2,0.4) 	# What percentage of your wealth will you put in each stock?
+# Compute the moments of a one-day change in your portfolio
+#mu_SPY = mean(myreturns[,4])
+#sigma_SPY = sd(myreturns[,4])
+
+# Sample a random return from the empirical joint distribution
+# This simulates a random day
+return.today = resample(myreturns, 1, orig.ids=FALSE)
+```
+ 
+And my new wealth would be:
+```{r}
+# Update the value of your holdings
+total_wealth = 100000
+holdings = total_wealth*c(0.2,0.2,0.2, 0.2, 0.2)
+holdings = holdings + holdings*return.today
+
+# Compute your new total wealth
+totalwealth = sum(holdings)
+totalwealth
+```
+So I earned 74 cents!
+I we do this for each of the 20 days our 4 week period has, then we will
+end with a new total wealth of
+```{r}
+# Now loop over 4 trading weeks
+totalwealth = 100000
+weights = c(0.2, 0.2, 0.2, 0.2, 0.2)
+holdings = weights * totalwealth
+n_days = 20
+wealthtracker = rep(0, n_days) # Set up a placeholder to track total wealth
+for(today in 1:n_days) {
+  return.today = resample(myreturns, 1, orig.ids=FALSE)
+  holdings = holdings + holdings*return.today
+  totalwealth = sum(holdings)
+  wealthtracker[today] = totalwealth
+}
+totalwealth
+#plot(wealthtracker)
+plot(wealthtracker, type='l')
+```
+Also we can see the plot which illustrates our wealth for these past 20 days.
+
+```{r}
+# Now simulate many different possible trading years!
+sim1 = foreach(i=1:5000, .combine='rbind') %do% {
+  totalwealth = 100000
+  weights = c(0.2, 0.2, 0.2, 0.2, 0.2)
+  holdings = weights * totalwealth
+  wealthtracker = rep(0, n_days) # Set up a placeholder to track total wealth
+  for(today in 1:n_days) {
+    return.today = resample(myreturns, 1, orig.ids=FALSE)
+    holdings = holdings + holdings*return.today
+    totalwealth = sum(holdings)
+    wealthtracker[today] = totalwealth
+  }
+  wealthtracker
+}
+```
+Now if we run a Monte Carlo simulation the summary of our results is a mean which can be interpreted as our gain in dollars from our investment and the second one is a standard deviation. We can also observe the histogram of our simulations, over the days.
+```{r}
+#Result summary
+head(sim1)
+hist(sim1[,n_days],25)
+mean(sim1) 
+sd(sim1)
+```
+
+
+```{r,echo=FALSE}
+# Profit/loss
+profit=sim1-100000 #final wealth- initial wealth
+hist(sim1-100000)
+```
+Next we calculate the $5\%$ Value At Risk (VAR), which is the $5\%$ quantile of the profit/loss distribution of a portfolio for 20 days.
+
+In our case, the VAR is:
+
+```{r}
+
+
+# Calculate 5% value at risk VAR
+
+#the 5%  quantile of the profit/loss distribution of a portfolio for 20 days
+quantile(sim1[,n_days], 0.05) - 100000
+
+qdata(profit,0.05)
+
+
+```
+ 
+Concluding, the assets are sorted from safest to riskiest, and whether the investor will chose a certain portfolio, this depends on whether he/she prefers to take risks or not, the horizon available etc.
+The portfolio 1 is ideal if someone wants to invest for a long period of time and then cash out. It is very safe,but the rewards are very slow. The portfolio 3 is the opposite, where the reward is high but the risk of losing money is high as well. In my opinion one should not put all of his/her money only in one bucket. I would go with Portfolio 2 which is a balanced approach of the 2 worlds.
+
+#Market segmentation
+```{r}
+social_marketing <- read.csv("~/GitHub/greendata/data/social_marketing.csv")  
+
+```
+
+To TA:  
+I began trying a PCA approach for this exercise. My main problem was that I could not interprete the results.
+Now I am trying to use kmeans++ for this exersise. So far I am using small clusters because they are more interpretable.
+
+
+
+
+
+
+
+
+
+
+
